@@ -6,9 +6,9 @@ process.env.NODE_ENV = process.env.NODE_ENV || 'dev';
 let urlDB;
 if (process.env.NODE_ENV === 'dev') {
     log = true;
-    urlDB = 'mongodb://localhost:27017/estacionamiento'; //mongodb://localhost:27017/ruta
+    urlDB = 'mongodb+srv://admin:admin@cluster0.dyboa.mongodb.net/Estacionamiento?retryWrites=true&w=majority'; //mongodb://localhost:27017/estacionamiento
 } else {
-    urlDB = '';
+    urlDB = 'mongodb+srv://admin:admin@cluster0.dyboa.mongodb.net/Estacionamiento?retryWrites=true&w=majority';
 }
 process.env.URLDB = urlDB;
 process.env.SEED = process.env.SEED || 'Frima-super-secreta';
