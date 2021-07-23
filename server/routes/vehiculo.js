@@ -8,7 +8,7 @@ const existAdmin = require('../config/rol');
 
 app.get('/', async (req, res) => {
     if (req.query.blnActivo) req.query.blnActivo = req.query.blnActivo;
-    let activoInactivo = req.query.blnActivo === 'true' ? true : false;
+    let activoInactivo = req.query.blnActivo === 'false' ? false : true;
     try {
         const getVehiculos = await Vehiculo.aggregate([
             {
@@ -60,6 +60,29 @@ app.get('/', async (req, res) => {
 
 });
 
+app.get('/obtenerSoloVehiculo', async (req, res) => {
+    try {
+        const obtenerCoche = await Vehiculo.find({ blnActivo: true }, { strModelo: 1, strMarca: 1 });
+        if (obtenerCoche.length > 0) {
+            return res.status(200).json({
+                ok: true,
+                resp: 200,
+                msg: 'Success: Informacion obtenida correctamente.',
+                cont: {
+                    obtenerCoche
+                }
+            });
+        }
+    } catch (error) {
+        return res.status(500).json({
+            ok: false,
+            resp: 400,
+            msg: error,
+        });
+    }
+
+})
+
 app.get('/obtenerId/:id', async (req, res) => {
     let id = req.params.id;
     try {
@@ -108,7 +131,7 @@ app.get('/obtenerId/:id', async (req, res) => {
             resp: 500,
             msg: 'Error: Error al obtener la api',
             cont: {
-                err: err.message
+                err: error.message
             }
         });
     }

@@ -13,13 +13,17 @@ let controlPagoSchema = new mongoose.Schema({
     idVehiculo: {
         type: mongoose.Types.ObjectId,
         ref: 'vehiculo',
-        default: null
+        required: [true, 'Favor de ingresar el identificador del vehiculo']
     },
     nmbCantidad: {
-        type: String,
-        required: [true, 'Favor de ingresar la cantidad a pagar']
+        type: Number,
+        default: 470
     },
-    dteFechaPago: {
+    dteFechaPagoInicio: {
+        type: Date,
+        required: [true, 'Favor de ingresar la fecha de pagar']
+    },
+    dteFechaPagoFin: {
         type: Date,
         required: [true, 'Favor de ingresar la fecha de pagar']
     },

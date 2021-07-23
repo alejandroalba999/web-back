@@ -24,6 +24,14 @@ let personaSchema = new mongoose.Schema({
         required: [true, 'Favor de ingresar el segundo apellido de la persona']
 
     },
+    strEstado: {
+        type: String,
+        required: [true, 'Favor de ingresar el estado proveniente de la persona']
+    },
+    strPais: {
+        type: String,
+        required: [true, 'Favor de ingresar el pais de la persona']
+    },
     strDireccion: {
         type: String,
         required: [true, 'Favor de ingresar la direccion de la persona']

@@ -40,10 +40,9 @@ let vehiculoSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Favor de ingresa alguna descripción del vehiculo']
     },
-    strImg: {
-        type: String,
-        default: "img.jpg"
-    },
+    strImg: [
+        'img.png'
+    ],
     idPersona: {
         type: mongoose.Types.ObjectId,
         ref: 'persona',

@@ -5,6 +5,7 @@ const path = require('path');
 // const { verificaToken } = require('../middlewares/autenticacion');
 const fs = require('fs');
 const app = express();
+const del = require('del');
 
 const Persona = require('../models/persona');
 const Vehiculo = require('../models/vehiculo');
@@ -15,11 +16,9 @@ app.use(fileUpload());
 app.put('/', (req, res) => {// [verificaToken], (req, res) => {
     let id = req.query.id;
     let ruta = req.query.ruta;
-    let archivo = req.files.archivo;
-    //archivo unico y guardarlo con extension del archivo.name
-    let nombre = uniqid() + path.extname(archivo.name);
-
-    if (!req.files) {
+    let archivo = req.files.archivo ? req.files.archivo : null;
+    // archivo unico y guardarlo con extension del archivo.name
+    if (!req.files || archivo == null) {
         return res.status(400).json({
             ok: false,
             err: {
@@ -27,6 +26,7 @@ app.put('/', (req, res) => {// [verificaToken], (req, res) => {
             }
         });
     }
+    let nombre = uniqid() + path.extname(archivo.name);
     let validExtensions = ['image/png', 'image/jpg', 'image/gif', 'image/jpeg', 'img/jfif'];
     if (!validExtensions.includes(archivo.mimetype)) {
         return res.status(400).json({
@@ -62,6 +62,64 @@ app.put('/', (req, res) => {// [verificaToken], (req, res) => {
             break;
     }
 });
+
+
+app.delete('/eliminar', async (req, res) => {
+    let id = req.query.id;
+    let ruta = req.query.ruta;
+    let strNombre = req.query.strNombre;
+
+    switch (ruta) {
+        case 'vehiculos':
+            const borradoServerVehiculo = borrarArchivo(strNombre, ruta);
+            if (borradoServerVehiculo) {
+                const deleteVehiculo = await Vehiculo.updateOne({ _id: id }, { $pull: { strImg: strNombre } });
+                if (deleteVehiculo) {
+                    return res.status(200).json({
+                        cont: {
+                            msg: `La imagen ${strNombre} fue eliminada con exito`
+                        }
+                    })
+                } else {
+                    return res.status(400).json({
+                        cont: {
+                            msg: `Error al eliminar la imagen ${strNombre}`
+                        }
+                    })
+                }
+            }
+
+            break;
+        case 'personas':
+
+            const borradoServerPersona = borrarArchivo(strNombre, ruta);
+            if (borradoServerPersona) {
+                const deletePersona = await Persona.updateOne({ _id: id }, { $pull: { strImg: strNombre } });
+                if (deletePersona) {
+                    return res.status(200).json({
+                        cont: {
+                            msg: `La imagen ${strNombre} fue eliminada con exito`
+                        }
+                    })
+                } else {
+                    return res.status(400).json({
+                        cont: {
+                            msg: `Error al eliminar la imagen ${strNombre}`
+                        }
+                    })
+                }
+            }
+
+            break;
+
+        default:
+            return res.status(400).json({
+                msg: 'no se encontro la ruta'
+            })
+            break;
+    }
+
+})
 
 //RETORNA AL USUARIO CON ID
 //ayuda a actualizar el nombre de la imagen en la bd //valida que la consulta este bien hecha
@@ -121,7 +179,7 @@ function imagenVehiculo(id, res, nombreImagen) {
                 }
             });
         }
-        usr.strImg = nombreImagen;
+        usr.strImg.push(nombreImagen);
 
         //Usuario.findByIdAndUpdate
         usr.save((err, usrDB) => {
@@ -140,11 +198,12 @@ function imagenVehiculo(id, res, nombreImagen) {
     });
 }
 
-function borrarArchivo(nombreImagen, ruta) {
-    let pathImg = path.resolve(__dirname, `./uploads/${ruta}/${nombreImagen}`);
-    if (fs.existsSync(pathImg)) {
-        fs.unlinkSync(pathImg);
-    }
-    console.log('Imagen borrada con exito');
+async function borrarArchivo(nombreImagen, ruta) {
+    let pathImg = path.resolve(`./uploads/${ruta}/${nombreImagen}`);
+    const deletedFilePaths = await del([pathImg]);
+    return deletedFilePaths;
+
 }
+
+
 module.exports = app;
