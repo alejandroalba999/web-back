@@ -26,11 +26,9 @@ let personaSchema = new mongoose.Schema({
     },
     strEstado: {
         type: String,
-        required: [true, 'Favor de ingresar el estado proveniente de la persona']
     },
     strPais: {
         type: String,
-        required: [true, 'Favor de ingresar el pais de la persona']
     },
     strDireccion: {
         type: String,

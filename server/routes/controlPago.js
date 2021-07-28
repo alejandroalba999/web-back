@@ -34,6 +34,7 @@ app.get('/', (req, res) => {
         {
             $project:
             {
+                "_id": 1,
                 "nmbCantidad": 1,
                 "vehiculo._id": 1,
                 "vehiculo.strMarca": 1,
@@ -103,7 +104,7 @@ app.get('/:blnActivo', (req, res) => {
         })
 });
 
-app.get('/obtenerId/:id', (req, res) => {
+app.get('/obtenerIdVehiculo/:id', (req, res) => {
     let id = req.params.id;
     if (id == null || id == undefined) {
         return res.status(500).json({
@@ -112,7 +113,7 @@ app.get('/obtenerId/:id', (req, res) => {
             msg: 'No se recibio un identificador',
         });
     }
-    ControlPago.find({ _id: id })
+    ControlPago.find({ idVehiculo: id })
         //solo aceptan valores numericos
         .then((controlPago) => {
             return res.status(200).json({
