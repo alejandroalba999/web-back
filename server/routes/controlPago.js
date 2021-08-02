@@ -54,7 +54,7 @@ app.get('/', (req, res) => {
                 _id: { vehiculo: "$vehiculo", cajon: "$cajon", persona: "$persona" },
             }
         },
-        { $sort: { updated_at: -1 } }
+        { $sort: { '_id.cajon.nmbCajon': 1 } }
 
 
     ]).then((controlPago) => {
@@ -78,6 +78,8 @@ app.get('/', (req, res) => {
         });
     })
 });
+
+
 app.get('/:blnActivo', (req, res) => {
     let blnActivo = req.params.blnActivo;
     ControlPago.find({ blnActivo: blnActivo }).sort({ created_at: -1 })
@@ -135,19 +137,94 @@ app.get('/obtenerIdVehiculo/:id', (req, res) => {
             });
         })
 });
+app.get('/obtenerId/:id', (req, res) => {
+    let id = req.params.id;
+    if (id == null || id == undefined) {
+        return res.status(500).json({
+            ok: false,
+            resp: 400,
+            msg: 'No se recibio un identificador',
+        });
+    }
+    ControlPago.find({ _id: id })
+        //solo aceptan valores numericos
+        .then((controlPago) => {
+            return res.status(200).json({
+                ok: true,
+                resp: 200,
+                msg: 'Success: Informacion obtenida correctamente.',
+                cont: {
+                    controlPago
+                }
+            });
+        }).catch((err) => {
+            return res.status(500).json({
+                ok: false,
+                resp: 500,
+                msg: 'Error: Error al obtener la api',
+                cont: {
+                    err: err.message
+                }
+            });
+        })
+});
 
 app.post('/', async (req, res) => {
-    let controlPago = new ControlPago(req.body);
-    // const encontrado = await ControlPago.findOne({ nmbCajon: req.body.nmbCajon });
-    // if (encontrado) {
-    //     return res.status(500).json({
-    //         ok: false,
-    //         resp: 400,
-    //         msg: 'El cajón ya ha sido  registrado',
-    //     });
-    // }
-    controlPago.save().then((controlPagos) => {
-        if (controlPagos === null) {
+    let dteFechaPagoInicio = req.body.dteFechaPagoInicio ? req.body.dteFechaPagoInicio : null;
+    let dteFechaPagoFin = req.body.dteFechaPagoFin ? req.body.dteFechaPagoFin : null;
+    let idVehiculo = req.body.idVehiculo ? req.body.idVehiculo : null;
+
+    if (dteFechaPagoFin == null || dteFechaPagoInicio == null || idVehiculo == null) {
+        return res.status(400).json({
+            msg: 'No se recibio el valor de uno o más campos',
+            cont: {
+                idVehiculo, dteFechaPagoInicio, dteFechaPagoFin
+            }
+        })
+    }
+    const pagoFecha = await ControlPago.find({
+        idVehiculo: idVehiculo, dteFechaPagoInicio: dteFechaPagoInicio, dteFechaPagoFin: dteFechaPagoFin
+    })
+
+    const pago = await ControlPago.find({
+        idVehiculo: idVehiculo,
+        $or: [{
+            dteFechaPagoInicio: { $gte: dteFechaPagoInicio, $lt: dteFechaPagoFin },
+            dteFechaPagoFin: { $gte: dteFechaPagoInicio, $lt: dteFechaPagoFin },
+        }]
+    })
+    if (pago.length > 0 || pagoFecha.length > 0) {
+        return res.status(400).json({
+            ok: false,
+            resp: 400,
+            msg: 'El rango de fecha de pago ya se encuentra registrado',
+            cont: {
+                pago: pago.length > 0 ? pago : pagoFecha
+            }
+        })
+    } else {
+        let controlPago = new ControlPago(req.body);
+        controlPago.save().then((controlPagos) => {
+            if (controlPagos === null) {
+                return res.status(500).json({
+                    ok: false,
+                    resp: 500,
+                    msg: 'Error: Error al registrar la api',
+                    cont: {
+                        err: err
+                    }
+                });
+            } else {
+                return res.status(200).json({
+                    ok: true,
+                    resp: 200,
+                    msg: 'Success: Informacion registrada correctamente.',
+                    cont: {
+                        controlPagos
+                    }
+                })
+            }
+        }).catch((err) => {
             return res.status(500).json({
                 ok: false,
                 resp: 500,
@@ -156,30 +233,10 @@ app.post('/', async (req, res) => {
                     err: err
                 }
             });
-        } else {
-            return res.status(200).json({
-                ok: true,
-                resp: 200,
-                msg: 'Success: Informacion registrada correctamente.',
-                cont: {
-                    controlPagos
-                }
-            })
-        }
-    }).catch((err) => {
-        return res.status(500).json({
-            ok: false,
-            resp: 500,
-            msg: 'Error: Error al registrar la api',
-            cont: {
-                err: err
-            }
-        });
-    })
+        })
+    }
+
 });
-
-
-
 
 app.put('/', async (req, res) => {
     let id = req.body._id;
@@ -193,14 +250,7 @@ app.put('/', async (req, res) => {
             msg: 'No se recibio un identificador',
         });
     }
-    // const encontrado = await ControlPago.findOne({ _id: { $ne: id }, nmbCajon: req.body.nmbCajon });
-    // if (encontrado) {
-    //     return res.status(500).json({
-    //         ok: false,
-    //         resp: 400,
-    //         msg: 'El cajón ya ha sido  registrado',
-    //     });
-    // }
+
     ControlPago.findByIdAndUpdate(id, body, { new: true, runValidators: true, context: 'query' })
         .then((controlPago) => {
             return res.status(200).json({

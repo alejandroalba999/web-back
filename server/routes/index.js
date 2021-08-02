@@ -10,4 +10,5 @@ app.use('/imagen', require('./imagen'));
 app.use('/login', require('./login'));
 app.use('/cajonVehiculo', require('./cajonVehiculo'));
 app.use('/controlPago', require('./controlPago'));
+app.use('/ultimoPago', require('./ultimoPago'));
 module.exports = app;
