@@ -115,7 +115,7 @@ app.get('/obtenerIdVehiculo/:id', (req, res) => {
             msg: 'No se recibio un identificador',
         });
     }
-    ControlPago.find({ idVehiculo: id })
+    ControlPago.find({ idVehiculo: id }).sort({ dteFechaPagoInicio: 1 })
         //solo aceptan valores numericos
         .then((controlPago) => {
             return res.status(200).json({
@@ -274,17 +274,15 @@ app.put('/', async (req, res) => {
 
 });
 
-app.delete('/:_id/:blnActivo', (req, res) => {
+app.delete('/:_id', (req, res) => {
     let id = req.params._id;
-    let blnActivo = req.params.blnActivo;
     // if (req.params.blnRentado) req.params.blnRentado = req.params.blnRentado
-
-    ControlPago.findByIdAndUpdate(id, { blnActivo: blnActivo }, { new: true, runValidators: true, context: 'query' })
+    ControlPago.remove({ _id: id })
         .then((controlPago) => {
             return res.status(200).json({
                 ok: true,
                 resp: 200,
-                msg: `Success: Informacion ${blnActivo == 'true' ? 'activada' : 'desactivada'} correctamente`,
+                msg: `Success: Informacion eliminada correctamente`,
                 cont: {
                     controlPago
                 }
